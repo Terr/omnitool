@@ -75,7 +75,22 @@ class LinkedListQueue(object):
 
         return output
 
-    # TODO Iteritems
+    def iteritems(self):
+        """Returns items in the queue as a generator, starting with the item in
+        the front of the queue.
+        """
+        current = self.first
+
+        while current is not None:
+            yield current.item
+            current = current.next_node
+
+    # Magic methods
+    def __iter__(self):
+        return self.iteritems()
+
+    def __len__(self):
+        return self.size()
 
     def __str__(self):
         return 'Queue: [' + ', '.join(self.items()) + ']'
