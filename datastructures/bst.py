@@ -1,3 +1,4 @@
+from datastructures.queue import LinkedListQueue
 
 
 # TODO Only necessary for Python 3, check for that. Also, see if its possible
@@ -21,6 +22,9 @@ class RedBlackBST(object):
             self.left = None
             self.right = None
 
+        def __str__(self):
+            return '%s: %s' % (self.key, self.value)
+
     def is_red(self, node):
         if node is None:
             return False
@@ -41,6 +45,7 @@ class RedBlackBST(object):
     # Standard BST search
     #
     def get(self, key):
+        """Returns value associated to key, or None if key cannot be found."""
         return self.get_node(key, self.root)
 
     def get_node(self, key, node):
@@ -56,6 +61,7 @@ class RedBlackBST(object):
         return None
 
     def contains(self, key, node=None):
+        """Does the BST contain a node with key?"""
         if node is None:
             return self.get(key) is not None
         else:
@@ -67,6 +73,7 @@ class RedBlackBST(object):
     def put(self, key, value):
         self.root = self.put_node(key, value, self.root)
         self.root.color = self.BLACK
+        assert self.check_integrity()
 
     def put_node(self, key, value, node):
         if node is None:
@@ -97,7 +104,7 @@ class RedBlackBST(object):
     #
 
     # Delete the key-value pair with the minimum key rooted at node
-    def delete_min(self, node=None):
+    def delete_min(self):
         if self.is_empty():
             raise ValueError('BST underflow')
 
@@ -106,25 +113,25 @@ class RedBlackBST(object):
            not self.is_red(self.root.right):
             self.root.color = self.RED
 
-        if node is None:
-            self.root = self.delete_min(self.root)
-        else:
-            if node.left is None:
-                return None
-
-            if not self.is_red(node.left) and \
-               not self.is_red(node.left.left):
-                node = self.move_red_left(node)
-
-            node.left = self.delete_min(node.left)
-
-            return self.balance(node)
+        self.root = self.delete_min_node(self.root)
 
         if not self.is_empty():
             self.root.color = self.BLACK
+
+    def delete_min_node(self, node):
+        if node.left is None:
+            return None
+
+        if not self.is_red(node.left) and \
+           not self.is_red(node.left.left):
+            node = self.move_red_left(node)
+
+        node.left = self.delete_min_node(node.left)
+
+        return self.balance(node)
 
     # Delete the key-value pair with the maximum key rooted at node
-    def delete_max(self, node=None):
+    def delete_max(self):
         if self.is_empty():
             raise ValueError('BST underflow')
 
@@ -133,27 +140,27 @@ class RedBlackBST(object):
            not self.is_red(self.root.right):
             self.root.color = self.RED
 
-        if node is None:
-            self.root = self.delete_max(self.root)
-        else:
-            if self.is_red(node.left):
-                node = self.rotate_right(node)
-
-            if node.right is None:
-                return None
-
-            if not self.is_red(node.right) and \
-               not self.is_red(node.right.left):
-                node = self.move_red_right(node)
-
-            node.right = self.delete_max(node.right)
-
-            return self.balance(node)
+        self.root = self.delete_max_node(self.root)
 
         if not self.is_empty():
             self.root.color = self.BLACK
 
-    def delete(self, key, node=None):
+    def delete_max_node(self, node):
+        if self.is_red(node.left):
+            node = self.rotate_right(node)
+
+        if node.right is None:
+            return None
+
+        if not self.is_red(node.right) and \
+           not self.is_red(node.right.left):
+            node = self.move_red_right(node)
+
+        node.right = self.delete_max_node(node.right)
+
+        return self.balance(node)
+
+    def delete(self, key):
         if not self.contains(key):
             raise ValueError('Tree does not contain key %s' % key)
 
@@ -162,37 +169,38 @@ class RedBlackBST(object):
            not self.is_red(self.root.right):
             self.root.color = self.RED
 
-        if node is None:
-            self.root = self.delete(key, self.root)
-        else:
-            if cmp(key, node.key) < 0:
-                if not self.is_red(node.left) and \
-                   not self.is_red(node.left.left):
-                    node = self.move_red_left(node)
-
-                node.left = self.delete(key, node.left)
-            else:
-                if self.is_red(node.left):
-                    node = self.rotate_right(node)
-
-                if cmp(key, node.key) == 0 and node.right is None:
-                    return None
-
-                if not self.is_red(node.right) and \
-                   not self.is_red(node.right.left):
-                    node = self.move_red_right(node)
-
-                if cmp(key, node.key) == 0:
-                    node.value = self.get_node(self.min(node.right).key, node.right)
-                    node.key = self.min(node.right).key
-                    node.right = self.delete_min(node.right)
-                else:
-                    node.right = self.delete(key, node.right)
-
-            return self.balance(node)
+        self.root = self.delete_node(key, self.root)
 
         if not self.is_empty():
             self.root.color = self.BLACK
+
+    def delete_node(self, key, node):
+        if cmp(key, node.key) < 0:
+            if not self.is_red(node.left) and \
+               not self.is_red(node.left.left):
+                node = self.move_red_left(node)
+
+            node.left = self.delete_node(key, node.left)
+        else:
+            if self.is_red(node.left):
+                node = self.rotate_right(node)
+
+            if cmp(key, node.key) == 0 and node.right is None:
+                return None
+
+            if not self.is_red(node.right) and \
+               not self.is_red(node.right.left):
+                node = self.move_red_right(node)
+
+            if cmp(key, node.key) == 0:
+                node_min = self.min_node(node.right)
+                node.key = node_min.key
+                node.value = node_min.value
+                node.right = self.delete_min_node(node.right)
+            else:
+                node.right = self.delete_node(key, node.right)
+
+        return self.balance(node)
 
     #
     # Red-Black tree helper functions
@@ -200,6 +208,8 @@ class RedBlackBST(object):
 
     # Make a left-leaning link lean to the right
     def rotate_right(self, node):
+        assert node is not None and self.is_red(node.left)
+
         x = node.left
         node.left = x.right
         x.right = node
@@ -211,6 +221,8 @@ class RedBlackBST(object):
 
     # Make a right-leaning link lean to the left
     def rotate_left(self, node):
+        assert node is not None and self.is_red(node.right)
+
         x = node.right
         node.right = x.left
         x.left = node
@@ -222,6 +234,13 @@ class RedBlackBST(object):
 
     # Flip the colors of a node and its two children
     def flip_colors(self, node):
+        assert node is not None and node.left is not None and \
+                node.right is not None
+        assert (not self.is_red(node) and self.is_red(node.left) and
+                self.is_red(node.right)) or \
+                (self.is_red(node) and not self.is_red(node.left) and
+                 not self.is_red(node.right))
+
         node.color = not node.color
         node.left.color = not node.left.color
         node.right.color = not node.right.color
@@ -229,6 +248,10 @@ class RedBlackBST(object):
     # Assuming that h is red and both h.left and h.left.left
     # are black, make h. or one of its children red.
     def move_red_left(self, node):
+        assert node is not None
+        assert self.is_red(node) and not self.is_red(node.left) and \
+                not self.is_red(node.left.left)
+
         self.flip_colors(node)
         if self.is_red(node.right.left):
             node.right = self.rotate_right(node.right)
@@ -239,14 +262,20 @@ class RedBlackBST(object):
     # Assuming that h is red and both h.right and h.right.left
     # are black, make h.right or one of its children red.
     def move_red_right(self, node):
+        assert node is not None
+        assert self.is_red(node) and not self.is_red(node.right) and \
+                not self.is_red(node.right.left)
+
         self.flip_colors(node)
         if self.is_red(node.left.left):
-            node.right = self.rotate_right(node)
+            node = self.rotate_right(node)
 
         return node
 
     # Restore red-black tree invariant
     def balance(self, node):
+        assert node is not None
+
         if self.is_red(node.right):
             node = self.rotate_left(node)
         if self.is_red(node.left) and self.is_red(node.left.left):
@@ -276,7 +305,7 @@ class RedBlackBST(object):
     def min(self):
         if self.is_empty():
             return None
-        return self.min_ndoe(self.root).key
+        return self.min_node(self.root).key
 
     def min_node(self, node):
         if node.left is None:
@@ -287,7 +316,7 @@ class RedBlackBST(object):
     def max(self):
         if self.is_empty():
             return None
-        return self.max(self.root).key
+        return self.max_node(self.root).key
 
     def max_node(self, node):
         if node.right is None:
@@ -319,15 +348,15 @@ class RedBlackBST(object):
         else:
             return node
 
-    def ceiling(self, key):
-        x = self.ceiling_node(key, self.root)
+    def ceil(self, key):
+        x = self.ceil_node(key, self.root)
 
         if x is None:
             return None
         else:
             return x.key
 
-    def ceiling_node(self, key, node):
+    def ceil_node(self, key, node):
         if node is None:
             return None
 
@@ -335,16 +364,16 @@ class RedBlackBST(object):
         if compare == 0:
             return node
         if compare > 0:
-            return self.ceiling_node(key, node.right)
+            return self.ceil_node(key, node.right)
 
-        t = self.ceiling_node(key, node.left)
+        t = self.ceil_node(key, node.left)
         if not t is None:
             return t
         else:
             return node
 
-    # The key of rank k
     def select(self, k):
+        """Return the key that is at rank k, 0-indexed."""
         if k < 0 or k >= self.size():
             return None
 
@@ -354,14 +383,16 @@ class RedBlackBST(object):
     def select_node(self, k, node):
         t = self.size_node(node.left)
         if t > k:
-            return self.select(k, node.left)
+            return self.select_node(k, node.left)
         elif t < k:
-            return self.select(k - t - 1, node.right)
+            return self.select_node(k - t - 1, node.right)
         else:
             return node
 
-    # Number of keys less than key
     def rank(self, key):
+        """The ordered position of the key, or number of keys less than
+        key. 0-indexed.
+        """
         return self.rank_node(key, self.root)
 
     def rank_node(self, key, node):
@@ -369,119 +400,9 @@ class RedBlackBST(object):
             return 0
 
         compare = cmp(key, node.key)
-        if cmp < 0:
-            return self.rank_node(key, node.left)
-        elif cmp > 0:
-            return 1 + self.size_node(node.left) + \
-                    self.rank_node(key, node.right)
-        else:
-            return self.size_node(node.left)
-
-
-    #
-    # Ordered symbol table methods
-    #
-    def min(self, node=None):
-        if self.is_empty():
-            return None
-
-        if node is None:
-            return self.min(self.root).key
-        else:
-            if node.left is None:
-                return node
-            else:
-                return self.min(node.left)
-
-    def max(self, node=None):
-        if self.is_empty():
-            return None
-
-        if node is None:
-            return self.max(self.root).key
-        else:
-            if node.right is None:
-                return node
-            else:
-                return self.max(node.right)
-
-    def floor(self, key):
-        x = self.floor_node(key, self.root)
-
-        if x is None:
-            return None
-        else:
-            return x.key
-
-    def floor_node(self, key, node):
-        if node is None:
-            return None
-
-        compare = cmp(key, node.key)
-        if compare == 0:
-            return node
         if compare < 0:
-            return self.floor_node(key, node.left)
-
-        t = self.floor_node(key, node.right)
-        if not t is None:
-            return t
-        else:
-            return node
-
-    def ceiling(self, key):
-        x = self.ceiling_node(key, self.root)
-
-        if x is None:
-            return None
-        else:
-            return x.key
-
-    def ceiling_node(self, key, node):
-        if node is None:
-            return None
-
-        compare = cmp(key, node.key)
-        if compare == 0:
-            return node
-        if compare > 0:
-            return self.ceiling_node(key, node.right)
-
-        t = self.ceiling_node(key, node.left)
-        if not t is None:
-            return t
-        else:
-            return node
-
-    # The key of rank k
-    def select(self, k):
-        if k < 0 or k >= self.size():
-            return None
-
-        x = self.select_node(k, self.root)
-        return x.key
-
-    def select_node(self, k, node):
-        t = self.size_node(node.left)
-        if t > k:
-            return self.select(k, node.left)
-        elif t < k:
-            return self.select(k - t - 1, node.right)
-        else:
-            return node
-
-    # Number of keys less than key
-    def rank(self, key):
-        return self.rank_node(key, self.root)
-
-    def rank_node(self, key, node):
-        if node is None:
-            return 0
-
-        compare = cmp(key, node.key)
-        if cmp < 0:
             return self.rank_node(key, node.left)
-        elif cmp > 0:
+        elif compare > 0:
             return 1 + self.size_node(node.left) + \
                     self.rank_node(key, node.right)
         else:
@@ -493,13 +414,94 @@ class RedBlackBST(object):
         """Returns all of the keys."""
         return self.keys_between(self.min(), self.max())
 
-    def keys_between(self, lo, hi):
+    def keys_between(self, lo_key, hi_key):
+        """Returns the keys between lo and hi"""
+        queue = LinkedListQueue()
+        self.keys_node(self.root, queue, lo_key, hi_key)
+        return queue
 
+    def keys_node(self, node, queue, lo_key, hi_key):
+        if node is None:
+            return
 
-if __name__ == '__main__':
-    bst = RedBlackBST()
-    bst.put('A', 1)
-    bst.put('B', 1)
-    bst.put('C', 1)
-    bst.put('E', 1)
-    import debug
+        compare_lo = cmp(lo_key, node.key)
+        compare_hi = cmp(hi_key, node.key)
+
+        if compare_lo < 0:
+            self.keys_node(node.left, queue, lo_key, hi_key)
+        if compare_lo <= 0 and compare_hi >= 0:
+            queue.enqueue(node.key)
+        if compare_hi > 0:
+            self.keys_node(node.right, queue, lo_key, hi_key)
+
+    # Testing functions
+    def check_integrity(self):
+        if not self.is_ordered(self.root, None, None):
+            raise ValueError('BST is not in symmetric order!')
+        if not self.is_23(self.root):
+            raise ValueError('BST is not a 2-3 tree')
+        if not self.is_balanced():
+            raise ValueError('BST is not balanced!')
+        return True
+
+    def is_ordered(self, node, min_key, max_key):
+        """Is the tree rooted at x a BST with all keys strictly between min and
+        max (if min or max is null, treat as empty constraint)?
+        """
+        if node is None:
+            return True
+
+        if min_key is not None and cmp(node.key, min_key) <= 0:
+            return False
+        if max_key is not None and cmp(node.key, max_key) >= 0:
+            return False
+
+        return self.is_ordered(node.left, min_key, node.key) and \
+                self.is_ordered(node.right, node.key, max_key)
+
+    def is_23(self, node):
+        """Does the tree have no red right links, and at most one (left)
+        red links in a row on any path?
+        """
+        if node is None:
+            return True
+
+        if self.is_red(node.right):
+            return False
+
+        if node is not self.root and self.is_red(node) and \
+           self.is_red(node.left):
+            return False
+
+        return self.is_23(node.left) and self.is_23(node.right)
+
+    def is_balanced(self):
+        """Do all paths from root to leaf have same number of black edges?"""
+        black = 0
+        node = self.root
+
+        while node is not None:
+            if not self.is_red(node):
+                black += 1
+            node = node.left
+
+        return self.is_balanced_node(self.root, black)
+
+    def is_balanced_node(self, node, black):
+        if node is None:
+            return black == 0
+
+        if not self.is_red(node):
+            black -= 1
+
+        return self.is_balanced_node(node.left, black) and \
+                self.is_balanced_node(node.right, black)
+
+    # Magic method
+    def __len__(self):
+        return self.size()
+
+    def __str__(self):
+        return '%s: %d nodes' % (
+            self.__class__.__name__, self.size()
+        )
