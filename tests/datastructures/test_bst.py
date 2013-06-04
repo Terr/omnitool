@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from datastructures.bst import RedBlackBST
+from omnitool.datastructures.bst import RedBlackBST
 
 
 class RedBlackBSTTest(TestCase):

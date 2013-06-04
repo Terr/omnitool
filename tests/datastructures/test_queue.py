@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from datastructures.queue import LinkedListQueue
+from omnitool.datastructures.queue import LinkedListQueue
 
 
 class LinkedListQueueTest(TestCase):

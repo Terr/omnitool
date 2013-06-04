@@ -1,1 +1,3 @@
 *.py[c|o]
+omnitool.egg-info/
+.ropeproject/

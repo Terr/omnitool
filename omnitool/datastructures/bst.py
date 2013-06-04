@@ -1,4 +1,4 @@
-from datastructures.queue import LinkedListQueue
+from omnitool.datastructures.queue import LinkedListQueue
 
 
 # TODO Only necessary for Python 3, check for that. Also, see if its possible
